@@ -1,0 +1,163 @@
+version: "3.8"
+
+services:
+  # PostgreSQL Database
+  db:
+    image: supabase/postgres:15.6.1.145
+    container_name: pstr-db
+    # Port exposed only for dev tooling — remove in production
+    ports:
+      - "127.0.0.1:5432:5432"
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: pstr_tracker
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required — must be at least 32 characters}
+      JWT_EXP: 3600
+    volumes:
+      - pstr-db-data:/var/lib/postgresql/data
+      - ./supabase/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  # Supabase Auth (GoTrue)
+  auth:
+    image: supabase/gotrue:v2.157.1
+    container_name: pstr-auth
+    # No host port — accessible only via Kong gateway
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      API_EXTERNAL_URL: ${API_EXTERNAL_URL:-http://localhost:8000}
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@db:5432/pstr_tracker
+      GOTRUE_SITE_URL: ${SITE_URL:-http://localhost:5173}
+      GOTRUE_URI_ALLOW_LIST: ""
+      GOTRUE_DISABLE_SIGNUP: "true"
+      GOTRUE_JWT_ADMIN_ROLES: service_role
+      GOTRUE_JWT_AUD: authenticated
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_JWT_EXP: 3600
+      GOTRUE_JWT_SECRET: ${JWT_SECRET}
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
+      GOTRUE_MAILER_AUTOCONFIRM: "true"
+      GOTRUE_SMTP_ADMIN_EMAIL: ${SMTP_ADMIN_EMAIL:-admin@localhost}
+      GOTRUE_SMTP_HOST: ${SMTP_HOST:-inbucket}
+      GOTRUE_SMTP_PORT: ${SMTP_PORT:-2500}
+      GOTRUE_SMTP_SENDER_NAME: ${SMTP_SENDER_NAME:-PSTR Tracker}
+      GOTRUE_MFA_ENABLED: "true"
+      GOTRUE_SECURITY_REFRESH_TOKEN_ROTATION_ENABLED: "true"
+      GOTRUE_SECURITY_REFRESH_TOKEN_REUSE_INTERVAL: "10"
+      GOTRUE_RATE_LIMIT_HEADER: X-Forwarded-For
+      GOTRUE_RATE_LIMIT_EMAIL_SENT: "5"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # PostgREST (auto-generated REST API)
+  rest:
+    image: postgrest/postgrest:v12.2.3
+    container_name: pstr-rest
+    # No host port — accessible only via Kong gateway
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@db:5432/pstr_tracker
+      PGRST_DB_SCHEMAS: public,storage
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Supabase Studio (admin UI) — dev only
+  studio:
+    image: supabase/studio:20240729-ce42139
+    container_name: pstr-studio
+    ports:
+      - "127.0.0.1:3001:3000"
+    environment:
+      STUDIO_PG_META_URL: http://meta:8080
+      SUPABASE_URL: http://kong:8000
+      SUPABASE_REST_URL: http://rest:3000
+      SUPABASE_ANON_KEY: ${ANON_KEY:?ANON_KEY is required}
+      SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY:?SERVICE_ROLE_KEY is required}
+    depends_on:
+      - meta
+    restart: unless-stopped
+
+  # PostgreSQL Meta (required by Studio)
+  meta:
+    image: supabase/postgres-meta:v0.83.2
+    container_name: pstr-meta
+    # No host port — internal only
+    environment:
+      PG_META_PORT: 8080
+      PG_META_DB_HOST: db
+      PG_META_DB_PORT: 5432
+      PG_META_DB_NAME: pstr_tracker
+      PG_META_DB_USER: supabase
+      PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Kong API Gateway — the only externally accessible service
+  kong:
+    image: kong:2.8.1
+    container_name: pstr-kong
+    ports:
+      - "8000:8000"
+      - "8443:8443"
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /var/lib/kong/kong.yml
+      KONG_DNS_ORDER: LAST,A,CNAME
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl,response-transformer
+      KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
+      KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
+    volumes:
+      - ./supabase/kong.yml:/var/lib/kong/kong.yml:ro
+    depends_on:
+      - auth
+      - rest
+    restart: unless-stopped
+
+  # Inbucket (email testing — dev only)
+  inbucket:
+    image: inbucket/inbucket:3.0.4
+    container_name: pstr-inbucket
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "2500:2500"
+    restart: unless-stopped
+
+  # Backup service (daily pg_dump)
+  backup:
+    image: prodrigestivill/postgres-backup-local:15
+    container_name: pstr-backup
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_DB: pstr_tracker
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      SCHEDULE: "@daily"
+      BACKUP_KEEP_DAYS: 30
+      BACKUP_KEEP_WEEKS: 4
+      BACKUP_KEEP_MONTHS: 6
+      HEALTHCHECK_PORT: 8081
+    volumes:
+      - pstr-backups:/backups
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pstr-db-data:
+  pstr-backups:

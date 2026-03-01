@@ -1,0 +1,70 @@
+_format_version: "1.1"
+
+services:
+  # Auth service
+  - name: auth-v1
+    url: http://auth:9999
+    routes:
+      - name: auth-v1-all
+        strip_path: true
+        paths:
+          - /auth/v1/
+    plugins:
+      - name: cors
+
+  # REST API (PostgREST)
+  - name: rest-v1
+    url: http://rest:3000
+    routes:
+      - name: rest-v1-all
+        strip_path: true
+        paths:
+          - /rest/v1/
+    plugins:
+      - name: cors
+
+consumers:
+  - username: anon
+    keyauth_credentials:
+      - key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
+  - username: service_role
+    keyauth_credentials:
+      - key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU
+
+plugins:
+  - name: cors
+    config:
+      origins:
+        - "http://localhost:5173"
+        - "http://localhost:3000"
+      methods:
+        - GET
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+        - OPTIONS
+      headers:
+        - Accept
+        - Authorization
+        - Content-Type
+        - apikey
+        - X-Client-Info
+      exposed_headers:
+        - Content-Range
+        - X-Total-Count
+      credentials: true
+      max_age: 3600
+  - name: key-auth
+    config:
+      hide_credentials: false
+      key_names:
+        - apikey
+  - name: response-transformer
+    config:
+      add:
+        headers:
+          - "Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' http://localhost:8000"
+          - "X-Content-Type-Options: nosniff"
+          - "X-Frame-Options: DENY"
+          - "Referrer-Policy: strict-origin-when-cross-origin"

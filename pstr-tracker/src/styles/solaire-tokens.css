@@ -1,0 +1,174 @@
+/* ==========================================================================
+   Solaire Compliance Design System — Design Tokens
+   Version: 1.0.0
+   Last updated: 2026-03-01
+
+   CSS custom properties for the Solaire Resort & Casino compliance
+   applications. Derived from the AMLCC Dashboard FY2025 design language.
+   ========================================================================== */
+
+:root {
+  /* -----------------------------------------------------------------------
+     Colors — Brand Palette
+     ----------------------------------------------------------------------- */
+
+  /* Primary Red-Orange: main accent, active nav, header border, primary buttons */
+  --color-primary: #E84C22;
+  --color-primary-hover: #d04420;
+  --color-primary-active: #b83c1c;
+  --color-primary-light: rgba(232, 76, 34, 0.08);
+  --color-primary-ghost: rgba(232, 76, 34, 0.04);
+
+  /* Divider/Title: section titles, header titles, KPI labels */
+  --color-divider: #B64926;
+  --color-divider-light: rgba(182, 73, 38, 0.12);
+
+  /* Deep Red: alert text, confidential badge background */
+  --color-deep-red: #B22600;
+  --color-deep-red-light: rgba(178, 38, 0, 0.08);
+
+  /* Orange: secondary badge (In Progress), accent */
+  --color-orange: #FF8427;
+  --color-orange-light: rgba(255, 132, 39, 0.12);
+
+  /* Gold/Amber: nav active border, section title underlines, tab active bg */
+  --color-gold: #FFBD47;
+  --color-gold-light: rgba(255, 189, 71, 0.15);
+  --color-gold-muted: #e5a93e;
+
+  /* Charcoal: body text, chart label text */
+  --color-charcoal: #505046;
+  --color-charcoal-light: #6e6e62;
+  --color-charcoal-muted: #8a8a7e;
+
+  /* -----------------------------------------------------------------------
+     Colors — Surfaces & Backgrounds
+     ----------------------------------------------------------------------- */
+
+  /* Page/sidebar background */
+  --color-bg-cream: #EFECE1;
+  --color-bg-cream-dark: #e4e0d4;
+
+  /* Cards, panels, header background */
+  --color-white: #FFFFFF;
+
+  /* Alternating table row stripes */
+  --color-off-white: #f9f8f6;
+
+  /* Table header background */
+  --color-warm-tint: #FFF8F0;
+
+  /* Success/Completed badges */
+  --color-success: #008000;
+  --color-success-light: rgba(0, 128, 0, 0.08);
+
+  /* -----------------------------------------------------------------------
+     Colors — Functional
+     ----------------------------------------------------------------------- */
+  --color-border: #e0ddd4;
+  --color-border-light: #eae8e0;
+  --color-border-focus: var(--color-primary);
+  --color-text-primary: var(--color-charcoal);
+  --color-text-secondary: var(--color-charcoal-light);
+  --color-text-muted: var(--color-charcoal-muted);
+  --color-text-inverse: var(--color-white);
+  --color-text-link: var(--color-primary);
+  --color-text-link-hover: var(--color-primary-hover);
+  --color-overlay: rgba(80, 80, 70, 0.45);
+
+  /* -----------------------------------------------------------------------
+     Typography
+     ----------------------------------------------------------------------- */
+  --font-primary: 'Figtree', 'Aptos', 'Calibri', sans-serif;
+  --font-chart: 'Aptos', 'Calibri', sans-serif;
+
+  /* Font Sizes */
+  --fs-xs: 0.75rem;    /* 12px */
+  --fs-sm: 0.875rem;   /* 14px */
+  --fs-base: 1rem;     /* 16px */
+  --fs-lg: 1.125rem;   /* 18px */
+  --fs-xl: 1.25rem;    /* 20px */
+  --fs-2xl: 1.5rem;    /* 24px */
+  --fs-3xl: 2rem;      /* 32px */
+
+  /* Font Weights */
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  /* Line Heights */
+  --lh-tight: 1.2;
+  --lh-base: 1.5;
+  --lh-relaxed: 1.65;
+
+  /* Letter Spacing */
+  --ls-tight: -0.01em;
+  --ls-normal: 0;
+  --ls-wide: 0.02em;
+  --ls-caps: 0.06em;
+
+  /* -----------------------------------------------------------------------
+     Spacing
+     ----------------------------------------------------------------------- */
+  --space-xs: 0.25rem;   /* 4px */
+  --space-sm: 0.5rem;    /* 8px */
+  --space-md: 1rem;      /* 16px */
+  --space-lg: 1.5rem;    /* 24px */
+  --space-xl: 2rem;      /* 32px */
+  --space-2xl: 2.5rem;   /* 40px */
+  --space-3xl: 3rem;     /* 48px */
+
+  /* -----------------------------------------------------------------------
+     Borders & Radius
+     ----------------------------------------------------------------------- */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  --border-width: 1px;
+  --border-width-thick: 2px;
+  --border-color: #e0ddd4;
+
+  /* -----------------------------------------------------------------------
+     Shadows
+     ----------------------------------------------------------------------- */
+  --shadow-sm: 0 1px 3px rgba(80, 80, 70, 0.06),
+               0 1px 2px rgba(80, 80, 70, 0.04);
+  --shadow-md: 0 4px 12px rgba(80, 80, 70, 0.08),
+               0 2px 4px rgba(80, 80, 70, 0.04);
+  --shadow-lg: 0 12px 32px rgba(80, 80, 70, 0.12),
+               0 4px 8px rgba(80, 80, 70, 0.06);
+  --shadow-focus: 0 0 0 3px rgba(232, 76, 34, 0.2);
+
+  /* -----------------------------------------------------------------------
+     Layout
+     ----------------------------------------------------------------------- */
+  --sidebar-width: 260px;
+  --sidebar-width-collapsed: 72px;
+  --header-height: 64px;
+  --content-max-width: 1400px;
+  --content-padding: var(--space-xl);
+
+  /* -----------------------------------------------------------------------
+     Transitions
+     ----------------------------------------------------------------------- */
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 400ms ease;
+
+  /* -----------------------------------------------------------------------
+     Z-Index Scale
+     ----------------------------------------------------------------------- */
+  --z-base: 0;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-sidebar: 300;
+  --z-header: 400;
+  --z-overlay: 500;
+  --z-modal: 600;
+  --z-toast: 700;
+  --z-confidential: 800;
+}
